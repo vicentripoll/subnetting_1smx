@@ -111,13 +111,12 @@ function createOperationBlock(ipBinary, maskBinary, resultBinary, originalPrefix
 
   wrapper.appendChild(createOperationRow('IP:      ', ipBinary, originalPrefix, newPrefix));
   wrapper.appendChild(createOperationRow('Máscara: ', maskBinary, originalPrefix, newPrefix));
-//wrapper.appendChild(createOperationRow('AND: -----------------------------------------------------'));
   const divider = document.createElement('div');
   divider.className = 'operation-divider';
   divider.textContent = '--------------------------------------------------';
   wrapper.appendChild(divider);
 
-  wrapper.appendChild(createOperationRow('Red:     ', resultBinary, originalPrefix, newPrefix));
+  wrapper.appendChild(createOperationRow('Red/Broadcast:     ', resultBinary, originalPrefix, newPrefix));
   return wrapper;
 }
 
@@ -303,10 +302,20 @@ function showCellExplanation(subnetIndex, field) {
       newPrefix: subnet.prefix,
     });
   } else if (field === 'broadcast') {
-    explanations.push(`Broadcast se obtiene a partir de la dirección de red de la subred.`);
-    explanations.push(`Broadcast = dirección de red (${subnet.networkAddress}) + ${subnetInfo.addressesPerSubnet} - 1`);
-    explanations.push(`= ${subnet.networkAddress} + ${subnetInfo.addressesPerSubnet} - 1`);
-    explanations.push(`= ${subnet.broadcastAddress}`);
+    explanations.push({ type: 'text', text: `El broadcast se obtiene a partir de la dirección de red de la subred poniendo todos los bits de host a '1'.` });
+    const selectedSubnetBits = (subnet.index - 1).toString(2).padStart(subnetInfo.subnetBits, '0');
+    explanations.push({ type: 'text', text: `Para esta subred el valor de los bits de subred es ${selectedSubnetBits}.` });
+    explanations.push({ type: 'binary', label: 'Broadcast con bits de host = 1', binary: ipToBinary(subnet.broadcastAddress), originalPrefix: subnetInfo.originalPrefix, newPrefix: subnet.prefix, decimal: subnet.broadcastAddress });
+    explanations.push({ type: 'binary', label: 'Máscara', binary: ipToBinary(prefixToMask(subnet.prefix)), originalPrefix: subnetInfo.originalPrefix, newPrefix: subnet.prefix, decimal: prefixToMask(subnet.prefix) });
+    explanations.push({ type: 'binary', label: 'Broadcast', binary: ipToBinary(subnet.broadcastAddress), originalPrefix: subnetInfo.originalPrefix, newPrefix: subnet.prefix, decimal: subnet.broadcastAddress });
+    explanations.push({
+      type: 'operation',
+      ipBinary: ipToBinary(subnet.networkAddress),
+      maskBinary: ipToBinary(prefixToMask(subnet.prefix)),
+      resultBinary: ipToBinary(subnet.broadcastAddress),
+      originalPrefix: subnetInfo.originalPrefix,
+      newPrefix: subnet.prefix,
+    });
   } else if (field === 'range') {
     explanations.push(`Primer host = dirección de red + 1 = ${subnet.networkAddress} + 1`);
     explanations.push(`Último host = broadcast - 1 = ${subnet.broadcastAddress} - 1`);
