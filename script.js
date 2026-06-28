@@ -1,10 +1,6 @@
-let steps = [];
-let currentStep = 0;
-let selectedType = 'FLSM';
 let subnetInfo = null;
 let selectedRow = null;
 
-const exerciseTypeSelect = document.getElementById('exerciseType');
 const infoType = document.getElementById('info-type');
 const infoNetwork = document.getElementById('info-network');
 const infoMask = document.getElementById('info-mask');
@@ -102,98 +98,6 @@ function buildSubnetInfo(network, prefix, subnets) {
   };
 }
 
-function buildSteps(network, prefix, subnets) {
-  const info = buildSubnetInfo(network, prefix, subnets);
-  const {
-    subnetBits,
-    newPrefix,
-    addressesPerSubnet,
-    newMaskText,
-    originalMaskText,
-    subnetCount,
-    firstSubnetStart,
-    subnets: subnetObjects,
-  } = info;
-
-  const subnetStrings = subnetObjects.map(subnet => `${subnet.networkAddress}/${subnet.prefix}`);
-
-  return [
-    {
-      title: '1. Validar los datos de entrada',
-      description: 'Comprobamos la dirección de red, la máscara y el número de subredes antes de iniciar los cálculos.',
-      details: {
-        'IP de red': network,
-        'Máscara CIDR original': `/${prefix}`,
-        'Máscara decimal original': originalMaskText,
-        'Subredes solicitadas': `${subnets}`,
-      },
-      maskInfo: {
-        originalPrefix: prefix,
-        subnetBits,
-        newPrefix,
-      },
-    },
-    {
-      title: '2. Calcular cuántos bits de subred necesitamos',
-      description: 'Determinar los bits necesarios para obtener al menos el número de subredes pedidas: usamos n bits donde 2^n debe ser igual o superior al número de subredes.',
-      details: {
-        'Subredes pedidas': `${subnets}`,
-        'Cálculo': `2^n >= ${subnets}`,
-        'Bits necesarios': `${subnetBits}`,
-        'Subredes posibles con esos bits': `${subnetCount}`,
-      },
-    },
-    {
-      title: '3. Calcular la nueva máscara de subred',
-      description: 'A la máscara original le añadimos los bits de subred calculados. La nueva máscara se aplica a todas las subredes FLSM.',
-      details: {
-        'Máscara original': `/${prefix}`,
-        'Bits adicionales': `${subnetBits}`,
-        'Nueva máscara CIDR': `/${newPrefix}`,
-        'Nueva máscara decimal': newMaskText,
-      },
-    },
-    {
-      title: '4. Obtener las subredes resultantes',
-      description: 'Dividimos la red original en subredes iguales. Cada subred tiene el mismo tamaño y la misma máscara.',
-      details: subnetStrings.reduce((acc, subnet, index) => {
-        acc[`Subred ${index + 1}`] = subnet;
-        return acc;
-      }, {
-        'Direcciones por subred': `${addressesPerSubnet}`,
-      }),
-    },
-    {
-      title: '5. Calcular la dirección de red y broadcast de la primera subred',
-      description: 'La primera subred empieza en la IP de red original. El broadcast es la última dirección de ese bloque de la subred.',
-      details: {
-        'Dirección de red de la subred 1': subnetStrings[0],
-        'Dirección de broadcast': numberToIp(firstSubnetStart + addressesPerSubnet - 1),
-        'Cálculo broadcast': `Primera IP + ${addressesPerSubnet} - 1`,
-      },
-    },
-    {
-      title: '6. Calcular el rango de hosts de la primera subred',
-      description: 'Los hosts válidos son las direcciones entre la dirección de red y la dirección de broadcast, sin incluirlas.',
-      details: {
-        'Primer host': numberToIp(firstSubnetStart + 1),
-        'Último host': numberToIp(firstSubnetStart + addressesPerSubnet - 2),
-        'Rango de hosts': `${numberToIp(firstSubnetStart + 1)} - ${numberToIp(firstSubnetStart + addressesPerSubnet - 2)}`,
-        'Hosts útiles': `${addressesPerSubnet - 2}`,
-      },
-    },
-    {
-      title: '7. Resumen final',
-      description: 'Resumen del ejercicio con la máscara aplicada, las subredes generadas y los valores de la primera subred.',
-      details: {
-        'Resultado final': `${subnets} subredes con /${newPrefix}`,
-        'Subred 1': subnetStrings[0],
-        'Broadcast 1': numberToIp(firstSubnetStart + addressesPerSubnet - 1),
-        'Rango host 1': `${numberToIp(firstSubnetStart + 1)} - ${numberToIp(firstSubnetStart + addressesPerSubnet - 2)}`,
-      },
-    },
-  ];
-}
 
 function renderMaskBits(originalPrefix, subnetBits, newPrefix) {
   if (!maskBitsContainer) return;
@@ -306,20 +210,6 @@ function updateMaskExplanation(originalPrefix, subnetBits, newPrefix) {
   maskExplanation.textContent = `Máscara resultante /${newPrefix} = ${prefixToMask(newPrefix)}. ${originalPrefix} bits de red, ${subnetBits} bits de subred, ${32 - newPrefix} bits de host.`;
 }
 
-function updateExerciseType(type) {
-  selectedType = type;
-  infoType.textContent = type;
-
-  if (type === 'FLSM') {
-    stepDescription.textContent = 'En este ejemplo utilizamos FLSM (Fixed Length Subnet Mask).';
-  } else {
-    stepDescription.textContent = 'VLSM aún no está implementado. De momento, puedes explorar el proceso FLSM y en próximas versiones se añadirá VLSM.';
-  }
-
-  currentStep = 0;
-  renderStep(currentStep);
-}
-
 function updateSummaryText(network, prefix, subnets) {
   exerciseEnunciado.textContent = `Se dispone de la red ${network}/${prefix} y se deben crear ${subnets} subredes iguales utilizando FLSM.`;
   infoNetwork.textContent = network;
@@ -338,19 +228,12 @@ function applyExerciseSettings() {
 
   updateSummaryText(network, prefix, subnets);
   subnetInfo = buildSubnetInfo(network, prefix, subnets);
-  steps = buildSteps(network, prefix, subnets);
-  currentStep = 0;
-  renderStep(currentStep);
   renderSubnetTable(subnetInfo);
 
-  const { originalPrefix, subnetBits, newPrefix } = steps[0].maskInfo;
+  const { originalPrefix, subnetBits, newPrefix } = subnetInfo;
   renderMaskBits(originalPrefix, subnetBits, newPrefix);
   updateMaskExplanation(originalPrefix, subnetBits, newPrefix);
 }
-
-exerciseTypeSelect.addEventListener('change', event => {
-  updateExerciseType(event.target.value);
-});
 
 applyExercise.addEventListener('click', applyExerciseSettings);
 
@@ -373,49 +256,13 @@ if (subnetTableBody) {
   });
 }
 
-const stepBadge = document.getElementById('step-badge');
-const stepTitle = document.getElementById('step-title');
-const stepDescription = document.getElementById('step-description');
-const stepsList = document.getElementById('steps');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
 const resetBtn = document.getElementById('resetBtn');
 
-function renderStep(index) {
-  const step = steps[index];
-  stepBadge.textContent = `Paso ${index + 1} de ${steps.length}`;
-  stepTitle.textContent = step.title;
-  stepDescription.textContent = step.description;
-  stepsList.innerHTML = '';
-
-  for (const [label, value] of Object.entries(step.details)) {
-    const item = document.createElement('li');
-    item.className = 'step-card';
-    item.innerHTML = `<strong>${label}</strong><span>${value}</span>`;
-    stepsList.appendChild(item);
-  }
-
-  prevBtn.disabled = index === 0;
-  nextBtn.disabled = index === steps.length - 1;
-}
-
-prevBtn.addEventListener('click', () => {
-  if (currentStep > 0) {
-    currentStep -= 1;
-    renderStep(currentStep);
-  }
-});
-
-nextBtn.addEventListener('click', () => {
-  if (currentStep < steps.length - 1) {
-    currentStep += 1;
-    renderStep(currentStep);
-  }
-});
-
 resetBtn.addEventListener('click', () => {
-  currentStep = 0;
-  renderStep(currentStep);
+  networkInput.value = '192.168.10.0';
+  prefixInput.value = 24;
+  subnetsInput.value = 4;
+  applyExerciseSettings();
 });
 
 applyExerciseSettings();
