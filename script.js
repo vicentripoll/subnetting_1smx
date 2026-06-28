@@ -35,6 +35,10 @@ function ipToBinary(ip) {
   return ipToNumber(ip).toString(2).padStart(32, '0');
 }
 
+function formatBinaryWithDots(binary) {
+  return binary.match(/.{1,8}/g).join('.');
+}
+
 function createBinaryLineElement(binary, originalPrefix, newPrefix, label, decimal) {
   const wrapper = document.createElement('div');
   wrapper.className = 'binary-line-container';
@@ -63,6 +67,57 @@ function createBinaryLineElement(binary, originalPrefix, newPrefix, label, decim
   });
 
   wrapper.appendChild(line);
+  return wrapper;
+}
+
+function createBinaryRow(binary, originalPrefix, newPrefix) {
+  const row = document.createElement('div');
+  row.className = 'binary-row';
+
+  binary.split('').forEach((bit, idx) => {
+    const bitSpan = document.createElement('span');
+    const bitClass = idx < originalPrefix ? 'network' : idx < newPrefix ? 'subnet' : 'host';
+    bitSpan.className = `binary-bit ${bitClass}`;
+    bitSpan.textContent = bit;
+    row.appendChild(bitSpan);
+
+    if (idx % 8 === 7 && idx !== binary.length - 1) {
+      const separator = document.createElement('span');
+      separator.className = 'binary-separator';
+      separator.textContent = '.';
+      row.appendChild(separator);
+    }
+  });
+
+  return row;
+}
+
+function createOperationRow(label, binary, originalPrefix, newPrefix) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'operation-row';
+
+  const labelDiv = document.createElement('div');
+  labelDiv.className = 'operation-label';
+  labelDiv.textContent = label;
+  wrapper.appendChild(labelDiv);
+
+  wrapper.appendChild(createBinaryRow(binary, originalPrefix, newPrefix));
+  return wrapper;
+}
+
+function createOperationBlock(ipBinary, maskBinary, resultBinary, originalPrefix, newPrefix) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'operation-block';
+
+  wrapper.appendChild(createOperationRow('IP:      ', ipBinary, originalPrefix, newPrefix));
+  wrapper.appendChild(createOperationRow('Máscara: ', maskBinary, originalPrefix, newPrefix));
+//wrapper.appendChild(createOperationRow('AND: -----------------------------------------------------'));
+  const divider = document.createElement('div');
+  divider.className = 'operation-divider';
+  divider.textContent = '--------------------------------------------------';
+  wrapper.appendChild(divider);
+
+  wrapper.appendChild(createOperationRow('Red:     ', resultBinary, originalPrefix, newPrefix));
   return wrapper;
 }
 
@@ -119,6 +174,7 @@ function buildSubnetInfo(network, prefix, subnets) {
   return {
     originalNetwork: network,
     originalPrefix: prefix,
+    requestedSubnets: subnets,
     subnetBits,
     newPrefix,
     addressesPerSubnet,
@@ -168,12 +224,15 @@ function renderSubnetTable(info) {
 
   info.subnets.forEach(subnet => {
     const row = document.createElement('tr');
+    const hostBits = 32 - subnet.prefix;
+    const usableHostsFormula = `2^${hostBits} - 2 = ${subnet.usableHosts}`;
     const cells = [
       { key: 'subnet', value: `${subnet.networkAddress}/${subnet.prefix}` },
       { key: 'network', value: subnet.networkAddress },
       { key: 'broadcast', value: subnet.broadcastAddress },
       { key: 'range', value: subnet.rangeHosts },
       { key: 'usableHosts', value: subnet.usableHosts },
+      { key: 'hostsCalc', value: usableHostsFormula },
     ];
 
     cells.forEach(cellInfo => {
@@ -204,20 +263,31 @@ function showCellExplanation(subnetIndex, field) {
     broadcast: 'Broadcast',
     range: 'Rango hosts',
     usableHosts: 'Hosts útiles',
+    hostsCalc: 'Cálculo hosts útiles',
   };
 
   const explanations = [];
-  const title = `${fieldLabels[field]} de Subred ${subnet.index}`;
+  const title = `${fieldLabels[field] || 'Explicación'} de Subred ${subnet.index}`;
 
   if (field === 'subnet') {
     explanations.push(`Subred ${subnet.index} = ${subnet.networkAddress}/${subnet.prefix}`);
     explanations.push(`La máscara de subred es /${subnet.prefix} = ${prefixToMask(subnet.prefix)}.`);
     explanations.push(`Cada subred tiene ${subnetInfo.addressesPerSubnet} direcciones totales.`);
   } else if (field === 'network') {
-    explanations.push({ type: 'text', text: `La dirección de red se obtiene aplicando AND entre la IP original y la máscara.` });
-    explanations.push({ type: 'binary', label: 'IP original', binary: ipToBinary(subnetInfo.originalNetwork), originalPrefix: subnetInfo.originalPrefix, newPrefix: subnet.prefix, decimal: subnetInfo.originalNetwork });
+    explanations.push({ type: 'text', text: `La dirección de red es la primera dirección de una subred y se obtiene poniendo todos los bits de host a ‘0’ y haciendo la operación ‘AND’ con la máscara.` });
+    const selectedSubnetBits = (subnet.index - 1).toString(2).padStart(subnetInfo.subnetBits, '0');
+    explanations.push({ type: 'text', text: `Para esta subred el valor de los bits de subred es ${selectedSubnetBits}.` });
+    explanations.push({ type: 'binary', label: 'IP', binary: ipToBinary(subnet.networkAddress), originalPrefix: subnetInfo.originalPrefix, newPrefix: subnet.prefix, decimal: subnet.networkAddress });
     explanations.push({ type: 'binary', label: 'Máscara', binary: ipToBinary(prefixToMask(subnet.prefix)), originalPrefix: subnetInfo.originalPrefix, newPrefix: subnet.prefix, decimal: prefixToMask(subnet.prefix) });
-    explanations.push({ type: 'binary', label: 'Resultado', binary: ipToBinary(subnet.networkAddress), originalPrefix: subnetInfo.originalPrefix, newPrefix: subnet.prefix, decimal: subnet.networkAddress });
+    explanations.push({ type: 'binary', label: 'Red', binary: ipToBinary(subnet.networkAddress), originalPrefix: subnetInfo.originalPrefix, newPrefix: subnet.prefix, decimal: subnet.networkAddress });
+    explanations.push({
+      type: 'operation',
+      ipBinary: ipToBinary(subnet.networkAddress),
+      maskBinary: ipToBinary(prefixToMask(subnet.prefix)),
+      resultBinary: ipToBinary(subnet.networkAddress),
+      originalPrefix: subnetInfo.originalPrefix,
+      newPrefix: subnet.prefix,
+    });
   } else if (field === 'broadcast') {
     explanations.push(`Broadcast = dirección de red + ${subnetInfo.addressesPerSubnet} - 1`);
     explanations.push(`= ${subnet.networkAddress} + ${subnetInfo.addressesPerSubnet} - 1`);
@@ -230,6 +300,11 @@ function showCellExplanation(subnetIndex, field) {
     explanations.push(`Hosts útiles = direcciones por subred - 2`);
     explanations.push(`= ${subnetInfo.addressesPerSubnet} - 2`);
     explanations.push(`= ${subnet.usableHosts}`);
+  } else if (field === 'hostsCalc') {
+    const hostBits = 32 - subnet.prefix;
+    explanations.push(`Hosts útiles = 2^n - 2, donde n = bits de host de la subred.`);
+    explanations.push(`n = 32 - ${subnet.prefix} = ${hostBits}`);
+    explanations.push(`Hosts útiles = 2^${hostBits} - 2 = ${subnet.usableHosts}`);
   }
 
   cellExplanationTitle.textContent = title;
@@ -241,6 +316,8 @@ function showCellExplanation(subnetIndex, field) {
       item.textContent = typeof step === 'string' ? step : step.text;
     } else if (step.type === 'binary') {
       item.appendChild(createBinaryLineElement(step.binary, step.originalPrefix, step.newPrefix, step.label, step.decimal));
+    } else if (step.type === 'operation') {
+      item.appendChild(createOperationBlock(step.ipBinary, step.maskBinary, step.resultBinary, step.originalPrefix, step.newPrefix));
     }
 
     cellExplanationList.appendChild(item);
@@ -248,11 +325,12 @@ function showCellExplanation(subnetIndex, field) {
   cellExplanationCard.hidden = false;
 }
 
-function updateMaskExplanation(originalPrefix, subnetBits, newPrefix) {
+function updateMaskExplanation(originalPrefix, subnetBits, newPrefix, requestedSubnets) {
   const maskExplanation = document.getElementById('maskExplanation');
   if (!maskExplanation) return;
 
-  maskExplanation.textContent = `Máscara resultante /${newPrefix} = ${prefixToMask(newPrefix)}. ${originalPrefix} bits de red, ${subnetBits} bits de subred, ${32 - newPrefix} bits de host.`;
+  const possibleSubnets = 2 ** subnetBits;
+  maskExplanation.innerHTML = `Máscara resultante /${newPrefix} = ${prefixToMask(newPrefix)}. ${originalPrefix} bits para la red, ${subnetBits} bits para las subredes y ${32 - newPrefix} bits para los hosts.<br><strong>Cómo se calcula:</strong> necesitamos ${requestedSubnets} subredes, por eso buscamos el menor n tal que ${requestedSubnets} ≤ 2^n. <br> n = ${subnetBits}, porque 2^${subnetBits} = ${possibleSubnets}.`;
 }
 
 function updateSummaryText(network, prefix, subnets) {
@@ -275,9 +353,9 @@ function applyExerciseSettings() {
   subnetInfo = buildSubnetInfo(network, prefix, subnets);
   renderSubnetTable(subnetInfo);
 
-  const { originalPrefix, subnetBits, newPrefix } = subnetInfo;
+  const { originalPrefix, requestedSubnets, subnetBits, newPrefix } = subnetInfo;
   renderMaskBits(originalPrefix, subnetBits, newPrefix);
-  updateMaskExplanation(originalPrefix, subnetBits, newPrefix);
+  updateMaskExplanation(originalPrefix, subnetBits, newPrefix, requestedSubnets);
 }
 
 applyExercise.addEventListener('click', applyExerciseSettings);
