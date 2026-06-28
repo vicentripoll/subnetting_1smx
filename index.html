@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subnetting paso a paso</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Subnetting paso a paso</h1>
+    <p class="subtitle">Aplicación web que muestra un ejercicio de subnetting resuelto paso a paso, tanto para FLSM como para VLSM, pensada para alumnado de 1SMR. Explora el enunciado y avanza entre los pasos hasta obtener máscara, subredes, red, broadcast y rango de hosts.</p>
+
+    <div class="card">
+      <div class="badge">Ejercicio</div>
+      <h2>Enunciado</h2>
+      <p id="exerciseEnunciado">Introduce la red de origen, la máscara y el número de subredes. La aplicación mostrará los pasos del ejercicio FLSM paso a paso.</p>
+      <div class="form-grid">
+        <div class="field-group">
+          <label for="networkInput"><strong>Red de origen</strong></label>
+          <input id="networkInput" type="text" value="192.168.10.0" placeholder="Ej: 192.168.10.0" />
+          <span class="hint">IP de red sin máscara.</span>
+        </div>
+        <div class="field-group">
+          <label for="prefixInput"><strong>Máscara CIDR</strong></label>
+          <input id="prefixInput" type="number" min="1" max="30" value="24" />
+          <span class="hint">Introduce el prefijo en formato /24.</span>
+        </div>
+        <div class="field-group">
+          <label for="subnetsInput"><strong>Número de subredes</strong></label>
+          <input id="subnetsInput" type="number" min="1" value="4" />
+          <span class="hint">Número de subredes que quieres crear.</span>
+        </div>
+      </div>
+      <button id="applyExercise" class="primary" type="button" style="margin-top: 18px;">Actualizar ejercicio</button>
+    </div>
+
+    <div class="card">
+      <div class="badge" id="step-badge">Paso 1 de 6</div>
+      <h2 id="step-title">Seleccionar el tipo de ejercicio</h2>
+      <p id="step-description">En este ejemplo inicial se utiliza FLSM (Fixed Length Subnet Mask) para dividir la red /24 en 4 subredes iguales.</p>
+
+      <div style="margin-bottom: 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <label for="exerciseType" style="font-weight: 600; color: #374151;">Modo:</label>
+        <select id="exerciseType" style="border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px 14px; background: white; color: #111827;">
+          <option value="FLSM">FLSM</option>
+          <option value="VLSM">VLSM (próximamente)</option>
+        </select>
+      </div>
+
+      <div class="info-grid" id="step-info">
+        <div class="info-card">
+          <strong>Tipo</strong>
+          <span id="info-type">FLSM</span>
+        </div>
+        <div class="info-card">
+          <strong>Red origen</strong>
+          <span id="info-network">192.168.10.0</span>
+        </div>
+        <div class="info-card">
+          <strong>Máscara</strong>
+          <span id="info-mask">/24</span>
+        </div>
+        <div class="info-card">
+          <strong>Subredes</strong>
+          <span id="info-subnets">4</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="step-list" id="steps"></ol>
+
+    <div class="controls">
+      <button class="secondary" id="prevBtn" type="button">Anterior</button>
+      <button class="primary" id="nextBtn" type="button">Siguiente</button>
+      <button class="secondary" id="resetBtn" type="button">Reiniciar</button>
+    </div>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
