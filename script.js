@@ -34,6 +34,40 @@ function prefixToMask(prefix) {
   return numberToIp(mask >>> 0);
 }
 
+function ipToBinary(ip) {
+  return ipToNumber(ip).toString(2).padStart(32, '0');
+}
+
+function createBinaryLineElement(binary, prefix, label, decimal) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'binary-line-container';
+
+  const caption = document.createElement('div');
+  caption.className = 'binary-label';
+  caption.textContent = `${label} (${decimal})`;
+  wrapper.appendChild(caption);
+
+  const line = document.createElement('div');
+  line.className = 'binary-line';
+
+  binary.split('').forEach((bit, idx) => {
+    const bitSpan = document.createElement('span');
+    bitSpan.className = `binary-bit ${idx < prefix ? 'network' : 'host'}`;
+    bitSpan.textContent = bit;
+    line.appendChild(bitSpan);
+
+    if (idx % 8 === 7 && idx !== binary.length - 1) {
+      const separator = document.createElement('span');
+      separator.className = 'binary-separator';
+      separator.textContent = '.';
+      line.appendChild(separator);
+    }
+  });
+
+  wrapper.appendChild(line);
+  return wrapper;
+}
+
 function isValidIp(ip) {
   return /^((25[0-5]|2[0-4]\d|[01]?\d?\d)(\.|$)){4}$/.test(ip);
 }
@@ -119,6 +153,13 @@ function renderMaskBits(originalPrefix, subnetBits, newPrefix) {
     bitSpan.textContent = bitValue;
     bitSpan.title = `${type === 'network' ? 'Red' : type === 'subnet' ? 'Subred' : 'Hosts'} bit ${i + 1}`;
     maskBitsContainer.appendChild(bitSpan);
+
+    if (i % 8 === 7 && i !== totalBits - 1) {
+      const separator = document.createElement('span');
+      separator.className = 'mask-separator';
+      separator.textContent = '.';
+      maskBitsContainer.appendChild(separator);
+    }
   }
 }
 
@@ -175,10 +216,13 @@ function showCellExplanation(subnetIndex, field) {
     explanations.push(`La máscara de subred es /${subnet.prefix} = ${prefixToMask(subnet.prefix)}.`);
     explanations.push(`Cada subred tiene ${subnetInfo.addressesPerSubnet} direcciones totales.`);
   } else if (field === 'network') {
-    explanations.push(`Dirección de red base = ${subnetInfo.originalNetwork}`);
-    explanations.push(`Tamaño de subred = ${subnetInfo.addressesPerSubnet} direcciones.`);
-    explanations.push(`Dirección de red de Subred ${subnet.index} = red base + (${subnet.index - 1}) × ${subnetInfo.addressesPerSubnet}`);
-    explanations.push(`${subnet.networkAddress}`);
+    explanations.push({ type: 'text', text: `La dirección de red se obtiene aplicando AND entre la IP original y la máscara.` });
+    explanations.push({ type: 'text', text: `IP original = ${subnetInfo.originalNetwork}` });
+    explanations.push({ type: 'text', text: `Máscara = /${subnet.prefix} = ${prefixToMask(subnet.prefix)}` });
+    explanations.push({ type: 'binary', label: 'IP original', binary: ipToBinary(subnetInfo.originalNetwork), prefix: subnetInfo.originalPrefix, decimal: subnetInfo.originalNetwork });
+    explanations.push({ type: 'binary', label: 'Máscara', binary: ipToBinary(prefixToMask(subnet.prefix)), prefix: subnetInfo.originalPrefix, decimal: prefixToMask(subnet.prefix) });
+    explanations.push({ type: 'binary', label: 'Resultado', binary: ipToBinary(subnet.networkAddress), prefix: subnetInfo.originalPrefix, decimal: subnet.networkAddress });
+    explanations.push({ type: 'text', text: `Resultado de la AND = ${subnet.networkAddress}` });
   } else if (field === 'broadcast') {
     explanations.push(`Broadcast = dirección de red + ${subnetInfo.addressesPerSubnet} - 1`);
     explanations.push(`= ${subnet.networkAddress} + ${subnetInfo.addressesPerSubnet} - 1`);
@@ -195,9 +239,15 @@ function showCellExplanation(subnetIndex, field) {
 
   cellExplanationTitle.textContent = title;
   cellExplanationList.innerHTML = '';
-  explanations.forEach(stepText => {
+  explanations.forEach(step => {
     const item = document.createElement('li');
-    item.textContent = stepText;
+
+    if (typeof step === 'string' || step.type === 'text') {
+      item.textContent = typeof step === 'string' ? step : step.text;
+    } else if (step.type === 'binary') {
+      item.appendChild(createBinaryLineElement(step.binary, step.prefix, step.label, step.decimal));
+    }
+
     cellExplanationList.appendChild(item);
   });
   cellExplanationCard.hidden = false;
