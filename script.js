@@ -215,6 +215,21 @@ function renderMaskBits(originalPrefix, subnetBits, newPrefix) {
       maskBitsContainer.appendChild(separator);
     }
   }
+
+  const networkLegend = document.querySelector('.mask-legend-item.network');
+  const subnetLegend = document.querySelector('.mask-legend-item.subnet');
+  const hostLegend = document.querySelector('.mask-legend-item.host');
+  const hostBits = 32 - newPrefix;
+
+  if (networkLegend) {
+    networkLegend.textContent = `Red (${originalPrefix} bits)`;
+  }
+  if (subnetLegend) {
+    subnetLegend.textContent = `Subred (${subnetBits} bits)`;
+  }
+  if (hostLegend) {
+    hostLegend.textContent = `Hosts (${hostBits} bits)`;
+  }
 }
 
 function renderSubnetTable(info) {
@@ -231,7 +246,6 @@ function renderSubnetTable(info) {
       { key: 'network', value: subnet.networkAddress },
       { key: 'broadcast', value: subnet.broadcastAddress },
       { key: 'range', value: subnet.rangeHosts },
-      { key: 'usableHosts', value: subnet.usableHosts },
       { key: 'hostsCalc', value: usableHostsFormula },
     ];
 
@@ -289,7 +303,8 @@ function showCellExplanation(subnetIndex, field) {
       newPrefix: subnet.prefix,
     });
   } else if (field === 'broadcast') {
-    explanations.push(`Broadcast = dirección de red + ${subnetInfo.addressesPerSubnet} - 1`);
+    explanations.push(`Broadcast se obtiene a partir de la dirección de red de la subred.`);
+    explanations.push(`Broadcast = dirección de red (${subnet.networkAddress}) + ${subnetInfo.addressesPerSubnet} - 1`);
     explanations.push(`= ${subnet.networkAddress} + ${subnetInfo.addressesPerSubnet} - 1`);
     explanations.push(`= ${subnet.broadcastAddress}`);
   } else if (field === 'range') {
