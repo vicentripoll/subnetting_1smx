@@ -1,6 +1,3 @@
-let subnetInfo = null;
-let selectedRow = null;
-
 const infoType = document.getElementById('info-type');
 const infoNetwork = document.getElementById('info-network');
 const infoMask = document.getElementById('info-mask');
@@ -38,7 +35,7 @@ function ipToBinary(ip) {
   return ipToNumber(ip).toString(2).padStart(32, '0');
 }
 
-function createBinaryLineElement(binary, prefix, label, decimal) {
+function createBinaryLineElement(binary, originalPrefix, newPrefix, label, decimal) {
   const wrapper = document.createElement('div');
   wrapper.className = 'binary-line-container';
 
@@ -52,7 +49,8 @@ function createBinaryLineElement(binary, prefix, label, decimal) {
 
   binary.split('').forEach((bit, idx) => {
     const bitSpan = document.createElement('span');
-    bitSpan.className = `binary-bit ${idx < prefix ? 'network' : 'host'}`;
+    const bitClass = idx < originalPrefix ? 'network' : idx < newPrefix ? 'subnet' : 'host';
+    bitSpan.className = `binary-bit ${bitClass}`;
     bitSpan.textContent = bit;
     line.appendChild(bitSpan);
 
@@ -217,12 +215,9 @@ function showCellExplanation(subnetIndex, field) {
     explanations.push(`Cada subred tiene ${subnetInfo.addressesPerSubnet} direcciones totales.`);
   } else if (field === 'network') {
     explanations.push({ type: 'text', text: `La dirección de red se obtiene aplicando AND entre la IP original y la máscara.` });
-    explanations.push({ type: 'text', text: `IP original = ${subnetInfo.originalNetwork}` });
-    explanations.push({ type: 'text', text: `Máscara = /${subnet.prefix} = ${prefixToMask(subnet.prefix)}` });
-    explanations.push({ type: 'binary', label: 'IP original', binary: ipToBinary(subnetInfo.originalNetwork), prefix: subnetInfo.originalPrefix, decimal: subnetInfo.originalNetwork });
-    explanations.push({ type: 'binary', label: 'Máscara', binary: ipToBinary(prefixToMask(subnet.prefix)), prefix: subnetInfo.originalPrefix, decimal: prefixToMask(subnet.prefix) });
-    explanations.push({ type: 'binary', label: 'Resultado', binary: ipToBinary(subnet.networkAddress), prefix: subnetInfo.originalPrefix, decimal: subnet.networkAddress });
-    explanations.push({ type: 'text', text: `Resultado de la AND = ${subnet.networkAddress}` });
+    explanations.push({ type: 'binary', label: 'IP original', binary: ipToBinary(subnetInfo.originalNetwork), originalPrefix: subnetInfo.originalPrefix, newPrefix: subnet.prefix, decimal: subnetInfo.originalNetwork });
+    explanations.push({ type: 'binary', label: 'Máscara', binary: ipToBinary(prefixToMask(subnet.prefix)), originalPrefix: subnetInfo.originalPrefix, newPrefix: subnet.prefix, decimal: prefixToMask(subnet.prefix) });
+    explanations.push({ type: 'binary', label: 'Resultado', binary: ipToBinary(subnet.networkAddress), originalPrefix: subnetInfo.originalPrefix, newPrefix: subnet.prefix, decimal: subnet.networkAddress });
   } else if (field === 'broadcast') {
     explanations.push(`Broadcast = dirección de red + ${subnetInfo.addressesPerSubnet} - 1`);
     explanations.push(`= ${subnet.networkAddress} + ${subnetInfo.addressesPerSubnet} - 1`);
@@ -245,7 +240,7 @@ function showCellExplanation(subnetIndex, field) {
     if (typeof step === 'string' || step.type === 'text') {
       item.textContent = typeof step === 'string' ? step : step.text;
     } else if (step.type === 'binary') {
-      item.appendChild(createBinaryLineElement(step.binary, step.prefix, step.label, step.decimal));
+      item.appendChild(createBinaryLineElement(step.binary, step.originalPrefix, step.newPrefix, step.label, step.decimal));
     }
 
     cellExplanationList.appendChild(item);

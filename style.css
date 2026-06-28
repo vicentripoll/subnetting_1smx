@@ -293,6 +293,10 @@ button:disabled {
   color: #1d4ed8;
 }
 
+.binary-bit.subnet {
+  color: #92400e;
+}
+
 .binary-bit.host {
   color: #065f46;
 }
