@@ -79,6 +79,29 @@
       </div>
     </div>
 
+    <div class="card">
+      <div class="badge">Tabla de subredes</div>
+      <p class="hint">Pulsa una celda para ver cómo se calcula ese valor paso a paso.</p>
+      <div class="table-wrapper">
+        <table class="subnet-table">
+          <thead>
+            <tr>
+              <th>Subred</th>
+              <th>Dirección de red</th>
+              <th>Broadcast</th>
+              <th>Rango hosts</th>
+              <th>Hosts útiles</th>
+            </tr>
+          </thead>
+          <tbody id="subnetTableBody"></tbody>
+        </table>
+      </div>
+      <div class="cell-explanation" id="cellExplanation" hidden>
+        <h3 id="cellExplanationTitle">Explicación</h3>
+        <ol id="cellExplanationList"></ol>
+      </div>
+    </div>
+
     <ol class="step-list" id="steps"></ol>
 
     <div class="controls">
