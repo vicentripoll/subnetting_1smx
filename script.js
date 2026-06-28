@@ -12,6 +12,7 @@ const prefixInput = document.getElementById('prefixInput');
 const subnetsInput = document.getElementById('subnetsInput');
 const applyExercise = document.getElementById('applyExercise');
 const exerciseEnunciado = document.getElementById('exerciseEnunciado');
+const maskBitsContainer = document.getElementById('maskBits');
 
 function ipToNumber(ip) {
   return ip.split('.').reduce((acc, octet) => (acc << 8) + Number(octet), 0) >>> 0;
@@ -40,14 +41,23 @@ function validateInputs(network, prefix, subnets) {
     alert('Introduce una dirección IP de red válida (por ejemplo 192.168.10.0).');
     return false;
   }
+
   if (!(prefix >= 1 && prefix <= 30)) {
     alert('Introduce una máscara CIDR válida entre 1 y 30.');
     return false;
   }
+
   if (!(subnets >= 1 && Number.isInteger(subnets))) {
     alert('Introduce un número válido de subredes (entero positivo).');
     return false;
   }
+
+  const requiredBits = Math.ceil(Math.log2(subnets));
+  if (prefix + requiredBits > 30) {
+    alert('El número de subredes es demasiado alto para la máscara indicada. Usa una máscara menor o menos subredes.');
+    return false;
+  }
+
   return true;
 }
 
@@ -55,7 +65,8 @@ function buildSteps(network, prefix, subnets) {
   const subnetBits = Math.ceil(Math.log2(subnets));
   const newPrefix = prefix + subnetBits;
   const addressesPerSubnet = 2 ** (32 - newPrefix);
-  const maskText = prefixToMask(newPrefix);
+  const newMaskText = prefixToMask(newPrefix);
+  const originalMaskText = prefixToMask(prefix);
   const subnetCount = 2 ** subnetBits;
   const firstSubnetStart = ipToNumber(network);
   const subnetsList = [];
@@ -67,54 +78,110 @@ function buildSteps(network, prefix, subnets) {
 
   return [
     {
-      title: 'Determinar cuántas subredes necesitamos',
-      description: `Queremos crear ${subnets} subredes iguales a partir de la red origen. Para FLSM usamos ${subnetBits} bits de subred porque 2^${subnetBits} = ${subnetCount}.`,
+      title: '1. Validar los datos de entrada',
+      description: 'Comprobamos la dirección de red, la máscara y el número de subredes antes de iniciar los cálculos.',
       details: {
-        'Número de subredes solicitadas': `${subnets}`,
-        'Bits para subredes': `${subnetBits} (porque 2^${subnetBits} = ${subnetCount})`,
+        'IP de red': network,
+        'Máscara CIDR original': `/${prefix}`,
+        'Máscara decimal original': originalMaskText,
+        'Subredes solicitadas': `${subnets}`,
+      },
+      maskInfo: {
+        originalPrefix: prefix,
+        subnetBits,
+        newPrefix,
       },
     },
     {
-      title: 'Calcular la nueva máscara de subred',
-      description: `La red original es /${prefix}. Añadimos ${subnetBits} bits para subred y la máscara final es /${newPrefix}.`,
+      title: '2. Calcular cuántos bits de subred necesitamos',
+      description: 'Determinar los bits necesarios para obtener al menos el número de subredes pedidas: usamos n bits donde 2^n debe ser igual o superior al número de subredes.',
       details: {
-        'Máscara CIDR': `/${newPrefix}`,
-        'Máscara de red': maskText,
+        'Subredes pedidas': `${subnets}`,
+        'Cálculo': `2^n >= ${subnets}`,
+        'Bits necesarios': `${subnetBits}`,
+        'Subredes posibles con esos bits': `${subnetCount}`,
       },
     },
     {
-      title: 'Obtener las subredes resultantes',
-      description: `Con /${newPrefix} la red se divide en subredes iguales de ${addressesPerSubnet} direcciones cada una.`,
+      title: '3. Calcular la nueva máscara de subred',
+      description: 'A la máscara original le añadimos los bits de subred calculados. La nueva máscara se aplica a todas las subredes FLSM.',
+      details: {
+        'Máscara original': `/${prefix}`,
+        'Bits adicionales': `${subnetBits}`,
+        'Nueva máscara CIDR': `/${newPrefix}`,
+        'Nueva máscara decimal': newMaskText,
+      },
+    },
+    {
+      title: '4. Obtener las subredes resultantes',
+      description: 'Dividimos la red original en subredes iguales. Cada subred tiene el mismo tamaño y la misma máscara.',
       details: subnetsList.reduce((acc, subnet, index) => {
         acc[`Subred ${index + 1}`] = subnet;
         return acc;
-      }, {}),
+      }, {
+        'Direcciones por subred': `${addressesPerSubnet}`,
+      }),
     },
     {
-      title: 'Calcular dirección de red y broadcast de la primera subred',
-      description: 'Para la primera subred se calculan la dirección de red y la dirección de broadcast.',
+      title: '5. Calcular la dirección de red y broadcast de la primera subred',
+      description: 'La primera subred empieza en la IP de red original. El broadcast es la última dirección de ese bloque de la subred.',
       details: {
-        'Dirección de red': subnetsList[0],
-        'Broadcast': numberToIp(firstSubnetStart + addressesPerSubnet - 1),
+        'Dirección de red de la subred 1': subnetsList[0],
+        'Dirección de broadcast': numberToIp(firstSubnetStart + addressesPerSubnet - 1),
+        'Cálculo broadcast': `Primera IP + ${addressesPerSubnet} - 1`,
       },
     },
     {
-      title: 'Calcular el rango de hosts de la primera subred',
-      description: 'Los hosts válidos están entre la dirección de red y la de broadcast, excluyendo ambos extremos.',
+      title: '6. Calcular el rango de hosts de la primera subred',
+      description: 'Los hosts válidos son las direcciones entre la dirección de red y la dirección de broadcast, sin incluirlas.',
       details: {
+        'Primer host': numberToIp(firstSubnetStart + 1),
+        'Último host': numberToIp(firstSubnetStart + addressesPerSubnet - 2),
         'Rango de hosts': `${numberToIp(firstSubnetStart + 1)} - ${numberToIp(firstSubnetStart + addressesPerSubnet - 2)}`,
-        'Total hosts': `${addressesPerSubnet - 2} hosts útiles`,
+        'Hosts útiles': `${addressesPerSubnet - 2}`,
       },
     },
     {
-      title: 'Resumen y siguiente paso',
-      description: 'Ya tenemos la máscara y las subredes. En próximas versiones añadiremos VLSM y más ejercicios dinámicos.',
+      title: '7. Resumen final',
+      description: 'Resumen del ejercicio con la máscara aplicada, las subredes generadas y los valores de la primera subred.',
       details: {
         'Resultado final': `${subnets} subredes con /${newPrefix}`,
-        'Siguiente paso': 'Implementar VLSM y cálculos automáticos de múltiples ejercicios',
+        'Subred 1': subnetsList[0],
+        'Broadcast 1': numberToIp(firstSubnetStart + addressesPerSubnet - 1),
+        'Rango host 1': `${numberToIp(firstSubnetStart + 1)} - ${numberToIp(firstSubnetStart + addressesPerSubnet - 2)}`,
       },
     },
   ];
+}
+
+function renderMaskBits(originalPrefix, subnetBits, newPrefix) {
+  if (!maskBitsContainer) return;
+
+  maskBitsContainer.innerHTML = '';
+  const totalBits = 32;
+
+  for (let i = 0; i < totalBits; i += 1) {
+    let type = 'host';
+    if (i < originalPrefix) {
+      type = 'network';
+    } else if (i < newPrefix) {
+      type = 'subnet';
+    }
+
+    const bitValue = i < newPrefix ? '1' : '0';
+    const bitSpan = document.createElement('span');
+    bitSpan.className = `mask-bit ${type}`;
+    bitSpan.textContent = bitValue;
+    bitSpan.title = `${type === 'network' ? 'Red' : type === 'subnet' ? 'Subred' : 'Hosts'} bit ${i + 1}`;
+    maskBitsContainer.appendChild(bitSpan);
+  }
+}
+
+function updateMaskExplanation(originalPrefix, subnetBits, newPrefix) {
+  const maskExplanation = document.getElementById('maskExplanation');
+  if (!maskExplanation) return;
+
+  maskExplanation.textContent = `Máscara resultante /${newPrefix} = ${prefixToMask(newPrefix)}. ${originalPrefix} bits de red, ${subnetBits} bits de subred, ${32 - newPrefix} bits de host.`;
 }
 
 function updateExerciseType(type) {
@@ -151,6 +218,10 @@ function applyExerciseSettings() {
   steps = buildSteps(network, prefix, subnets);
   currentStep = 0;
   renderStep(currentStep);
+
+  const { originalPrefix, subnetBits, newPrefix } = steps[0].maskInfo;
+  renderMaskBits(originalPrefix, subnetBits, newPrefix);
+  updateMaskExplanation(originalPrefix, subnetBits, newPrefix);
 }
 
 exerciseTypeSelect.addEventListener('change', event => {
