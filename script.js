@@ -361,10 +361,10 @@ function updateMaskExplanation(originalPrefix, subnetBits, newPrefix, requestedS
   maskExplanation.innerHTML = `Máscara resultante /${newPrefix} = ${prefixToMask(newPrefix)}. ${originalPrefix} bits para la red, ${subnetBits} bits para las subredes y ${32 - newPrefix} bits para los hosts.<br><strong>Cómo se calcula:</strong> necesitamos ${requestedSubnets} subredes, por eso buscamos el menor n tal que ${requestedSubnets} ≤ 2^n. <br> n = ${subnetBits}, porque 2^${subnetBits} = ${possibleSubnets}.`;
 }
 
-function updateSummaryText(network, prefix, subnets) {
+function updateSummaryText(network, prefix, subnets, resultPrefix) {
   exerciseEnunciado.textContent = `Se dispone de la red ${network}/${prefix} y se deben crear ${subnets} subredes iguales utilizando FLSM.`;
   infoNetwork.textContent = network;
-  infoMask.textContent = `/${prefix}`;
+  infoMask.textContent = `/${resultPrefix}`;
   infoSubnets.textContent = subnets;
 }
 
@@ -377,8 +377,8 @@ function applyExerciseSettings() {
     return;
   }
 
-  updateSummaryText(network, prefix, subnets);
   subnetInfo = buildSubnetInfo(network, prefix, subnets);
+  updateSummaryText(network, prefix, subnets, subnetInfo.newPrefix);
   renderSubnetTable(subnetInfo);
 
   const { originalPrefix, requestedSubnets, subnetBits, newPrefix } = subnetInfo;
