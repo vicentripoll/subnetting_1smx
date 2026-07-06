@@ -1,0 +1,22 @@
+Quiero desarrollar una aplicación web educativa con HTML para alumnado del Ciclo 
+Formativo de Grado Medio de Sistemas Microinformáticos y Redes (SMX).
+
+El objetivo es crear una aplicación que ayude a aprender y comprender el subnetting 
+de forma visual, guiada y paso a paso.
+
+La aplicación debe generar un ejercicio de subnetting y mostrar su resolución paso a paso. 
+
+- Identificar la dirección IP y el prefijo.
+- Calcular la máscara de red.
+- Calcular la dirección de red.
+- Calcular la dirección de broadcast.
+- Calcular el rango de direcciones de host.
+- Mostrar un resumen final con todos los datos.
+
+La explicación debe utilizar un lenguaje claro, sencillo y didáctico.
+
+No desarrolles toda la aplicación de una sola vez. 
+Trabaja mediante pequeñas iteraciones. Antes de generar código, 
+explícame brevemente qué vamos a desarrollar en esa iteración y espera mi confirmación 
+antes de continuar. Mantén el código organizado, modular y bien comentado para que pueda 
+utilizarse también como recurso didáctico en clase.
