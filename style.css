@@ -66,6 +66,13 @@ body {
   font-size: 1.15rem;
 }
 
+.card h3 {
+  margin-bottom: 12px;
+  font-size: 1rem;
+  color: #1f2937;
+  font-weight: 600;
+}
+
 .step-list {
   list-style: none;
   padding: 0;
@@ -392,6 +399,13 @@ input[type='text'], input[type='number'], select {
   background: white;
   color: #111827;
   box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+  font-size: 1rem;
+}
+
+input[type='text']:focus, input[type='number']:focus, select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .hint {
@@ -481,5 +495,215 @@ input[type='text'], input[type='number'], select {
 
   .operation-row {
     grid-template-columns: 70px 1fr;
+  }
+}
+
+/* ============================================
+   ESTILOS PARA EJERCICIOS PROGRESIVOS
+   ============================================ */
+
+/* Barra de progreso */
+.progress-container {
+  margin-top: 16px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  border-radius: 999px;
+  width: 0%;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+}
+
+.progress-text {
+  margin-top: 8px;
+  font-size: 0.95rem;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+/* Mensajes de retroalimentación */
+.feedback-hidden {
+  display: none !important;
+}
+
+.feedback-error {
+  display: block;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-top: 16px;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+}
+
+.feedback-success {
+  display: block;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #166534;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-top: 16px;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tarjetas especiales */
+.hidden {
+  display: none !important;
+}
+
+.hint-card,
+.success-card,
+.final-card {
+  border-left: 4px solid #2563eb;
+  animation: slideIn 0.3s ease;
+}
+
+.hint-card {
+  background: #dbeafe;
+  border-left-color: #3b82f6;
+}
+
+.hint-card .badge {
+  background: #bfdbfe;
+  color: #1e40af;
+}
+
+.hint-card p {
+  color: #1e3a8a;
+  line-height: 1.6;
+}
+
+.success-card {
+  background: #dcfce7;
+  border-left-color: #16a34a;
+}
+
+.success-card .badge {
+  background: #bbf7d0;
+  color: #166534;
+}
+
+.success-card p {
+  color: #166534;
+  line-height: 1.6;
+}
+
+.success-card strong {
+  color: #15803d;
+}
+
+.final-card {
+  background: #fef3c7;
+  border-left-color: #f59e0b;
+}
+
+.final-card h2 {
+  color: #b45309;
+  margin-top: 8px;
+}
+
+.final-card .badge {
+  background: #fde68a;
+  color: #92400e;
+}
+
+.final-card p {
+  color: #92400e;
+  line-height: 1.6;
+}
+
+/* Grupo de botones */
+.button-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.button-group button {
+  flex: 1;
+  min-width: 140px;
+}
+
+.secondary {
+  background: #f3f4f6;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+}
+
+.secondary:hover {
+  background: #e5e7eb;
+}
+
+/* Secciones colapsables */
+.info-section,
+.table-section {
+  animation: slideIn 0.3s ease;
+}
+
+/* Enlace a página principal */
+.link-button {
+  display: inline-block;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.link-button:hover {
+  background-color: #dbeafe;
+}
+
+/* Descripción del ejercicio */
+.exercise-description {
+  line-height: 1.6;
+  color: #4b5563;
+  font-size: 1rem;
+}
+
+.exercise-description strong {
+  color: #1f2937;
+}
+
+/* Responsive para ejercicios */
+@media (max-width: 780px) {
+  .button-group {
+    flex-direction: column;
+  }
+
+  .button-group button {
+    width: 100%;
+  }
+
+  .progress-bar {
+    height: 10px;
   }
 }
