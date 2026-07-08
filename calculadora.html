@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subnetting paso a paso</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- Encabezado principal con introducción visual -->
+    <header class="hero">
+      <div class="hero-copy">
+        <div class="badge">💡 Redes · SMX</div>
+        <h1>Subnetting paso a paso</h1>
+        <p class="subtitle">Aplicación web que muestra un ejercicio de subnetting resuelto paso a paso, pensada para alumnado de grado medio de SMX. Explora el enunciado y avanza entre los pasos hasta obtener máscara, subredes, red, broadcast y rango de hosts.</p>
+      </div>
+      <div class="hero-visual">
+        <img src="assets/network-illustration.svg" alt="Ilustración de redes y subnetting" />
+      </div>
+    </header>
+
+    <!-- Sección del ejercicio inicial -->
+
+    <div class="card">
+      <div class="badge">Ejercicio</div>
+      <h2>Enunciado</h2>
+      <p id="exerciseEnunciado">Introduce la red de origen, la máscara y el número de subredes. Pulsa una celda en la tabla para ver la solución y el cálculo asociado.</p>
+      <div class="form-grid">
+        <div class="field-group">
+          <label for="networkInput"><strong>Red de origen</strong></label>
+          <input id="networkInput" type="text" value="192.168.10.0" placeholder="Ej: 192.168.10.0" />
+          <span class="hint">IP de red sin máscara.</span>
+        </div>
+        <div class="field-group">
+          <label for="prefixInput"><strong>Máscara CIDR</strong></label>
+          <input id="prefixInput" type="number" min="1" max="30" value="24" />
+          <span class="hint">Introduce el prefijo en formato /24.</span>
+        </div>
+        <div class="field-group">
+          <label for="subnetsInput"><strong>Número de subredes</strong></label>
+          <input id="subnetsInput" type="number" min="1" value="4" />
+          <span class="hint">Número de subredes que quieres crear.</span>
+        </div>
+      </div>
+      <button id="applyExercise" class="primary" type="button" style="margin-top: 18px;">Actualizar ejercicio</button>
+    </div>
+
+    <!-- Resumen de la red y la máscara resultante -->
+    <div class="card">
+      <div class="badge">Información de red</div>
+      <div class="info-grid" id="step-info">
+        <div class="info-card">
+          <strong>Tipo</strong>
+          <span id="info-type">FLSM</span>
+        </div>
+        <div class="info-card">
+          <strong>Red origen</strong>
+          <span id="info-network">192.168.10.0</span>
+        </div>
+        <div class="info-card">
+          <strong>Máscara de subred</strong>
+          <span id="info-mask">/24</span>
+          <span class="hint">Máscara final tras dividir la red.</span>
+        </div>
+        <div class="info-card">
+          <strong>Subredes</strong>
+          <span id="info-subnets">4</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visualización de la máscara en formato binario -->
+    <div class="card">
+      <div class="badge">Máscara binaria</div>
+      <p id="maskExplanation">Aquí se muestra la máscara en bits, diferenciando los bits de red, subred y host.</p>
+      <div class="mask-bits" id="maskBits"></div>
+      <div class="mask-legend">
+        <span class="mask-legend-item network">Red</span>
+        <span class="mask-legend-item subnet">Subred</span>
+        <span class="mask-legend-item host">Hosts</span>
+      </div>
+    </div>
+
+    <!-- Tabla con los datos de cada subred -->
+    <div class="card">
+      <div class="badge">Tabla de subredes</div>
+      <p class="hint">Pulsa una celda para ver cómo se calcula ese valor paso a paso.</p>
+      <div class="table-wrapper">
+        <table class="subnet-table">
+          <thead>
+            <tr>
+              <th>Subred</th>
+              <th>Dirección de red</th>
+              <th>Broadcast</th>
+              <th>Rango hosts</th>
+              <th>Cálculo hosts útiles</th>
+            </tr>
+          </thead>
+          <tbody id="subnetTableBody"></tbody>
+        </table>
+      </div>
+      <div class="cell-explanation" id="cellExplanation" hidden>
+        <h3 id="cellExplanationTitle">Explicación</h3>
+        <ol id="cellExplanationList"></ol>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="secondary" id="resetBtn" type="button">Reiniciar</button>
+      <a href="exercises.html" class="button primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; padding: 12px 20px; border-radius: 12px; font-weight: 700; background: linear-gradient(90deg, #10b981, #34d399); color: white; cursor: pointer; border: none; box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08); transition: transform 0.15s ease, box-shadow 0.15s ease;">📚 Ejercicios Progresivos</a>
+      <a href="index.html" class="button secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; padding: 12px 20px; border-radius: 12px; font-weight: 700; background: #f3f4f6; color: #1f2937; cursor: pointer; border: 1px solid #d1d5db; box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08); transition: transform 0.15s ease, box-shadow 0.15s ease;">← Volver al inicio</a>
+    </div>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
