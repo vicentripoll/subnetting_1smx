@@ -3,35 +3,35 @@ const exercises = [
   {
     id: 1,
     title: 'Ejercicio 1: Subnetting Básico (FLSM)',
-    description:
-      'Se dispone de la red 192.168.10.0/24 y se necesitan crear **4 subredes** iguales. Esto es lo más básico del subnetting: dividir una red en partes iguales.',
-    hint: 'Para crear 4 subredes necesitas: 2^n ≥ 4, por lo que n = 2. Esto significa que la nueva máscara será /24 + 2 = /26.',
+    descriptionTemplate:
+      'Se dispone de la red 192.168.10.0/24 y se necesitan crear **{subnets} subredes** iguales. Esto es lo más básico del subnetting: dividir una red en partes iguales.',
+    hint: 'Para crear subredes necesitas: 2^n ≥ número de subredes. Encuentra el valor de n más pequeño que cumpla esta condición.',
     network: '192.168.10.0',
     prefix: 24,
-    subnets: 4,
-    expectedNewPrefix: 26,
+    possibleSubnets: [2, 4, 8, 16],
+    currentSubnets: null, // Se genera aleatoriamente al cargar
   },
   {
     id: 2,
     title: 'Ejercicio 2: Red Clase B',
-    description:
-      'Se dispone de la red 172.16.0.0/16 y se necesitan crear **8 subredes** iguales. Este ejercicio es un poco más desafiante porque trabajamos con una red Clase B (más grande).',
-    hint: 'Para crear 8 subredes: 2^n ≥ 8, por lo que n = 3. Nueva máscara: /16 + 3 = /19.',
+    descriptionTemplate:
+      'Se dispone de la red 172.16.0.0/16 y se necesitan crear **{subnets} subredes** iguales. Este ejercicio es un poco más desafiante porque trabajamos con una red Clase B (más grande).',
+    hint: 'Para crear subredes: 2^n ≥ número de subredes. Realiza el cálculo considerando que trabajas con más espacio de direcciones.',
     network: '172.16.0.0',
     prefix: 16,
-    subnets: 8,
-    expectedNewPrefix: 19,
+    possibleSubnets: [4, 8, 16, 32, 64],
+    currentSubnets: null,
   },
   {
     id: 3,
     title: 'Ejercicio 3: Red Clase A',
-    description:
-      'Se dispone de la red 10.0.0.0/8 y se necesitan crear **16 subredes** iguales. Este es el más desafiante: trabajas con una red Clase A (la más grande), creando muchas subredes.',
-    hint: 'Para crear 16 subredes: 2^n ≥ 16, por lo que n = 4. Nueva máscara: /8 + 4 = /12.',
+    descriptionTemplate:
+      'Se dispone de la red 10.0.0.0/8 y se necesitan crear **{subnets} subredes** iguales. Este es el más desafiante: trabajas con una red Clase A (la más grande), creando muchas subredes.',
+    hint: 'Para crear subredes: 2^n ≥ número de subredes. Ten en cuenta que trabajas con el espacio de direcciones más grande.',
     network: '10.0.0.0',
     prefix: 8,
-    subnets: 16,
-    expectedNewPrefix: 12,
+    possibleSubnets: [8, 16, 32, 64, 128, 256],
+    currentSubnets: null,
   },
 ];
 
@@ -39,6 +39,7 @@ const exercises = [
 let currentExerciseIndex = 0;
 let completedExercises = new Set();
 let hintShown = false;
+let lastValidationState = {};
 
 // Elementos del DOM
 const networkInput = document.getElementById('networkInput');
@@ -72,6 +73,12 @@ function loadProgress() {
   }
 }
 
+// Generar número aleatorio de subredes para un ejercicio
+function generateRandomSubnets(exercise) {
+  const randomIndex = Math.floor(Math.random() * exercise.possibleSubnets.length);
+  return exercise.possibleSubnets[randomIndex];
+}
+
 // Guardar progreso
 function saveProgress() {
   const data = {
@@ -95,11 +102,18 @@ function loadExercise() {
 
   const exercise = getCurrentExercise();
   hintShown = false;
+  lastValidationState = {}; // Limpiar estado de validación anterior
+
+  // Generar número aleatorio de subredes
+  exercise.currentSubnets = generateRandomSubnets(exercise);
+
+  // Generar descripción con el número de subredes aleatorio
+  const description = exercise.descriptionTemplate.replace('{subnets}', exercise.currentSubnets);
 
   // Actualizar título y descripción
   document.getElementById('exerciseBadge').textContent = `Ejercicio ${exercise.id}/${exercises.length}`;
   document.getElementById('exerciseTitle').textContent = exercise.title;
-  document.getElementById('exerciseDescription').innerHTML = exercise.description;
+  document.getElementById('exerciseDescription').innerHTML = description;
 
   // Limpiar inputs
   networkInput.value = '';
@@ -111,11 +125,19 @@ function loadExercise() {
   feedbackMessage.textContent = '';
   feedbackMessage.className = 'feedback-hidden';
 
+  // Limpiar estilos de validación
+  clearValidationStyles();
+
   // Ocultar tarjetas
   hintCard.classList.add('hidden');
   successCard.classList.add('hidden');
   infoSection.classList.add('hidden');
   tableSection.classList.add('hidden');
+
+  // Deshabilitar botón de pista al cargar ejercicio
+  showHint.disabled = true;
+  showHint.style.opacity = '0.5';
+  showHint.style.cursor = 'not-allowed';
 
   // Actualizar progreso
   updateProgressBar();
@@ -144,37 +166,94 @@ function verifyAnswer() {
   const inputNewMask = parseInt(newMaskInput.value);
   const inputHosts = parseInt(hostsInput.value);
 
-  // Validar que los campos no estén vacíos
-  if (!inputNetwork || isNaN(inputPrefix) || isNaN(inputSubnets) || 
-      isNaN(inputBits) || isNaN(inputNewMask) || isNaN(inputHosts)) {
-    showFeedback('❌ Incorrecto', 'error');
-    return;
-  }
+  // Limpiar estilos previos
+  clearValidationStyles();
 
-  // Calcular valores esperados
-  const expectedBits = Math.ceil(Math.log2(inputSubnets));
-  const expectedNewMask = inputPrefix + expectedBits;
+  // Calcular valores esperados BASÁNDOSE EN EL EJERCICIO (no en inputs del usuario)
+  const expectedBits = Math.ceil(Math.log2(exercise.currentSubnets));
+  const expectedNewMask = exercise.prefix + expectedBits;
   const expectedHostBits = 32 - expectedNewMask;
   const expectedHosts = Math.pow(2, expectedHostBits) - 2;
 
-  // Validar todas las respuestas
+  // Validar campo por campo
   const isNetworkCorrect = inputNetwork === exercise.network;
   const isPrefixCorrect = inputPrefix === exercise.prefix;
-  const isSubnetsCorrect = inputSubnets === exercise.subnets;
+  const isSubnetsCorrect = inputSubnets === exercise.currentSubnets;
   const isBitsCorrect = inputBits === expectedBits;
   const isNewMaskCorrect = inputNewMask === expectedNewMask;
   const isHostsCorrect = inputHosts === expectedHosts;
+
+  // Contar campos correctos
+  let correctCount = 0;
+  if (isNetworkCorrect) correctCount++;
+  if (isPrefixCorrect) correctCount++;
+  if (isSubnetsCorrect) correctCount++;
+  if (isBitsCorrect) correctCount++;
+  if (isNewMaskCorrect) correctCount++;
+  if (isHostsCorrect) correctCount++;
+
+  // Guardar estado de validación para la pista
+  lastValidationState = {
+    network: { correct: isNetworkCorrect, expected: exercise.network, actual: inputNetwork },
+    prefix: { correct: isPrefixCorrect, expected: exercise.prefix, actual: inputPrefix },
+    subnets: { correct: isSubnetsCorrect, expected: exercise.currentSubnets, actual: inputSubnets },
+    bits: { correct: isBitsCorrect, expected: expectedBits, actual: inputBits },
+    newMask: { correct: isNewMaskCorrect, expected: expectedNewMask, actual: inputNewMask },
+    hosts: { correct: isHostsCorrect, expected: expectedHosts, actual: inputHosts },
+  };
+
+  // Aplicar estilos de validación
+  applyValidationStyle(networkInput, isNetworkCorrect);
+  applyValidationStyle(prefixInput, isPrefixCorrect);
+  applyValidationStyle(subnetsInput, isSubnetsCorrect);
+  applyValidationStyle(bitsInput, isBitsCorrect);
+  applyValidationStyle(newMaskInput, isNewMaskCorrect);
+  applyValidationStyle(hostsInput, isHostsCorrect);
+
+  // Habilitar/deshabilitar botón de pista basándose en campos correctos
+  if (correctCount >= 3) {
+    showHint.disabled = false;
+    showHint.style.opacity = '1';
+    showHint.style.cursor = 'pointer';
+  } else {
+    showHint.disabled = true;
+    showHint.style.opacity = '0.5';
+    showHint.style.cursor = 'not-allowed';
+  }
 
   const allCorrect = isNetworkCorrect && isPrefixCorrect && isSubnetsCorrect && 
                      isBitsCorrect && isNewMaskCorrect && isHostsCorrect;
 
   if (allCorrect) {
-    showFeedback('✅ Correcto', 'success');
+    showFeedback('✅ ¡Todas las respuestas son correctas!', 'success');
     markExerciseComplete();
-    showSuccess(exercise);
+    setTimeout(() => {
+      showSuccess(exercise);
+    }, 500);
   } else {
-    showFeedback('❌ Incorrecto', 'error');
+    showFeedback('❌ Algunas respuestas son incorrectas. Revisa los campos marcados en rojo.', 'error');
   }
+}
+
+// Aplicar estilos de validación a un input
+function applyValidationStyle(input, isCorrect) {
+  if (isCorrect) {
+    input.classList.add('valid');
+    input.classList.remove('invalid');
+  } else {
+    input.classList.add('invalid');
+    input.classList.remove('valid');
+  }
+}
+
+// Limpiar estilos de validación
+function clearValidationStyles() {
+  networkInput.classList.remove('valid', 'invalid');
+  prefixInput.classList.remove('valid', 'invalid');
+  subnetsInput.classList.remove('valid', 'invalid');
+  bitsInput.classList.remove('valid', 'invalid');
+  newMaskInput.classList.remove('valid', 'invalid');
+  hostsInput.classList.remove('valid', 'invalid');
 }
 
 // Mostrar retroalimentación
@@ -189,7 +268,45 @@ function showFeedback(message, type) {
 // Mostrar pista
 function showHintCard() {
   const exercise = getCurrentExercise();
-  hintContent.innerHTML = exercise.hint;
+  let hintText = exercise.hint + '<br><br>';
+
+  // Agregar información sobre campos incorrectos
+  const errors = [];
+
+  if (!lastValidationState.network?.correct) {
+    errors.push(`<strong>Red de origen:</strong> Debería ser ${lastValidationState.network?.expected || exercise.network}`);
+  }
+  if (!lastValidationState.prefix?.correct) {
+    errors.push(`<strong>Máscara CIDR original:</strong> Debería ser /${lastValidationState.prefix?.expected || exercise.prefix}`);
+  }
+  if (!lastValidationState.subnets?.correct) {
+    errors.push(`<strong>Número de subredes:</strong> Debería ser ${lastValidationState.subnets?.expected || exercise.currentSubnets}`);
+  }
+  if (!lastValidationState.bits?.correct) {
+    const correctBits = Math.ceil(Math.log2(exercise.currentSubnets));
+    errors.push(`<strong>Bits necesarios:</strong> Debería ser ${correctBits} (porque 2^${correctBits} = ${Math.pow(2, correctBits)})`);
+  }
+  if (!lastValidationState.newMask?.correct) {
+    const correctBits = Math.ceil(Math.log2(exercise.currentSubnets));
+    const correctMask = exercise.prefix + correctBits;
+    errors.push(`<strong>Nueva máscara:</strong> Debería ser /${correctMask} (${exercise.prefix} + ${correctBits} bits de subred)`);
+  }
+  if (!lastValidationState.hosts?.correct) {
+    const correctBits = Math.ceil(Math.log2(exercise.currentSubnets));
+    const correctMask = exercise.prefix + correctBits;
+    const hostBits = 32 - correctMask;
+    const correctHosts = Math.pow(2, hostBits) - 2;
+    errors.push(`<strong>Hosts disponibles:</strong> Debería ser ${correctHosts} (2^${hostBits} - 2)`);
+  }
+
+  if (errors.length > 0) {
+    hintText += '<strong>Campos que necesitas corregir:</strong><br>';
+    hintText += errors.join('<br>');
+  } else {
+    hintText += '¡Todos tus valores son correctos!';
+  }
+
+  hintContent.innerHTML = hintText;
   hintCard.classList.remove('hidden');
   hintShown = true;
   hintCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -204,8 +321,8 @@ function markExerciseComplete() {
 // Mostrar pantalla de éxito
 function showSuccess(exercise) {
   // Calcular información de la red
-  const expectedBits = Math.ceil(Math.log2(exercise.subnets));
-  const newPrefix = exercise.expectedNewPrefix;
+  const expectedBits = Math.ceil(Math.log2(exercise.currentSubnets));
+  const newPrefix = exercise.prefix + expectedBits;
   const hostBits = 32 - newPrefix;
   const addressesPerSubnet = Math.pow(2, hostBits);
   const usefulHosts = addressesPerSubnet - 2;
@@ -246,7 +363,7 @@ function generateSubnetTable(exercise, newPrefix) {
   const hostBits = 32 - newPrefix;
   const addressesPerSubnet = Math.pow(2, hostBits);
 
-  for (let i = 0; i < exercise.subnets; i++) {
+  for (let i = 0; i < exercise.currentSubnets; i++) {
     const subnetAddr = networkNum + i * addressesPerSubnet;
     const broadcastAddr = subnetAddr + addressesPerSubnet - 1;
     const firstHost = subnetAddr + 1;
