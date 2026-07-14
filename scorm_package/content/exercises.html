@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ejercicios de Subnetting - Progresivos</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- Encabezado principal -->
+    <header class="hero">
+      <div class="hero-copy">
+        <div class="badge">📚 Redes · SMX</div>
+        <h1>Ejercicios Progresivos</h1>
+        <p class="subtitle">Resuelve los ejercicios de subnetting de menor a mayor dificultad. Debes resolver cada ejercicio correctamente para pasar al siguiente.</p>
+      </div>
+      <div class="hero-visual">
+        <img src="assets/network-illustration.svg" alt="Ilustración de redes y subnetting" />
+      </div>
+    </header>
+
+    <!-- Barra de progreso -->
+    <div class="card">
+      <div class="badge">Tu Progreso</div>
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p class="progress-text" id="progressText">Ejercicio 0/0</p>
+      </div>
+    </div>
+
+    <!-- Sección del ejercicio actual -->
+    <div class="card">
+      <div class="badge" id="exerciseBadge">Ejercicio 1</div>
+      <h2 id="exerciseTitle">Enunciado</h2>
+      <p id="exerciseDescription" class="exercise-description"></p>
+
+      <div class="form-grid">
+        <div class="field-group">
+          <label for="networkInput"><strong>Red de origen</strong></label>
+          <input id="networkInput" type="text" placeholder="Ej: 192.168.10.0" />
+          <span class="hint">IP de red sin máscara.</span>
+        </div>
+        <div class="field-group">
+          <label for="prefixInput"><strong>Máscara CIDR original</strong></label>
+          <input id="prefixInput" type="number" min="1" max="30" />
+          <span class="hint">Introduce el prefijo en formato /24.</span>
+        </div>
+        <div class="field-group">
+          <label for="subnetsInput"><strong>Número de subredes</strong></label>
+          <input id="subnetsInput" type="number" min="1" />
+          <span class="hint">Número de subredes que quieres crear.</span>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 1.1rem;">Calcula y completa:</h3>
+      
+      <div class="form-grid">
+        <div class="field-group">
+          <label for="bitsInput"><strong>Bits necesarios</strong></label>
+          <input id="bitsInput" type="number" min="1" placeholder="¿Cuántos bits?" />
+          <span class="hint">Bits de subred necesarios (2^n)</span>
+        </div>
+        <div class="field-group">
+          <label for="newMaskInput"><strong>Nueva máscara CIDR</strong></label>
+          <input id="newMaskInput" type="number" min="1" max="30" placeholder="ej: /26" />
+          <span class="hint">La nueva máscara tras dividir.</span>
+        </div>
+        <div class="field-group">
+          <label for="hostsInput"><strong>Hosts disponibles por subred</strong></label>
+          <input id="hostsInput" type="number" min="1" placeholder="Excluye red y broadcast" />
+          <span class="hint">Hosts útiles (2^n - 2)</span>
+        </div>
+      </div>
+
+      <!-- Mensaje de validación -->
+      <div id="feedbackMessage" class="feedback-hidden"></div>
+
+      <div class="button-group">
+        <button id="verifyExercise" class="primary" type="button">Verificar respuesta</button>
+        <button id="showHint" class="secondary" type="button" title="Necesitas al menos 3 apartados correctos">Ver pista</button>
+      </div>
+
+      <p id="hintRequirement" class="hint-requirement">💡 Nota: El botón de pista se activará cuando tengas al menos 3 apartados correctos.</p>
+    </div>
+
+    <!-- Sección de pista -->
+    <div class="card hint-card hidden" id="hintCard">
+      <div class="badge">💡 Pista</div>
+      <p id="hintContent"></p>
+    </div>
+
+    <!-- Sección de éxito -->
+    <div class="card success-card hidden" id="successCard">
+      <div class="badge">✅ ¡Correcto!</div>
+      <p id="successMessage"></p>
+      <button id="nextExercise" class="primary" type="button" style="margin-top: 16px;">Siguiente ejercicio →</button>
+    </div>
+
+    <!-- Sección final -->
+    <div class="card final-card hidden" id="finalCard">
+      <div class="badge">🎉 ¡Felicitaciones!</div>
+      <h2>Has completado todos los ejercicios</h2>
+      <p>Excelente trabajo. Has completado exitosamente todos los ejercicios de subnetting progresivos.</p>
+      <div class="button-group">
+        <button id="restartExercises" class="primary" type="button">Reiniciar desde el inicio</button>
+        <button id="goToMain" class="secondary" type="button">Ir a la página principal</button>
+      </div>
+    </div>
+
+    <!-- Información de red resultante -->
+    <div class="card info-section hidden" id="infoSection">
+      <div class="badge">Información de red</div>
+      <div class="info-grid">
+        <div class="info-card">
+          <strong>Tipo</strong>
+          <span id="info-type">FLSM</span>
+        </div>
+        <div class="info-card">
+          <strong>Nueva máscara</strong>
+          <span id="info-mask">-</span>
+        </div>
+        <div class="info-card">
+          <strong>Direcciones por subred</strong>
+          <span id="info-addresses">-</span>
+        </div>
+        <div class="info-card">
+          <strong>Hosts útiles por subred</strong>
+          <span id="info-hosts">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de subredes resultante -->
+    <div class="card table-section hidden" id="tableSection">
+      <div class="badge">Tabla de subredes</div>
+      <div class="table-wrapper">
+        <table class="subnet-table">
+          <thead>
+            <tr>
+              <th>Subred</th>
+              <th>Dirección de red</th>
+              <th>Broadcast</th>
+              <th>Rango hosts</th>
+              <th>Hosts útiles</th>
+            </tr>
+          </thead>
+          <tbody id="subnetTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Enlace a página principal -->
+    <div style="text-align: center; margin-top: 32px;">
+      <a href="index.html" class="link-button">← Volver a la página principal</a>
+    </div>
+  </div>
+
+  <script src="exercises.js"></script>
+</body>
+</html>
