@@ -1,6 +1,6 @@
 # 🌐 Subnetting FLSM - Herramienta Educativa Interactiva
 
-Una aplicación web educativa diseñada para aprender y practicar **subnetting con FLSM** (Fixed Length Subnet Mask) paso a paso. Perfecta para estudiantes de **1SMX** (Sistemas Microinformáticos y en Red) y anyone interesado en redes de computadoras.
+Una aplicación web educativa diseñada para aprender y practicar **subnetting con FLSM** (Fixed Length Subnet Mask) paso a paso. Perfecta para estudiantes de **1SMX** (Sistemas Microinformáticos y en Red) y cualquiera interesado en redes de computadoras.
 
 ![JavaScript](https://img.shields.io/badge/JavaScript-52.4%25-F7DF1E?logo=javascript&logoColor=black)
 ![HTML5](https://img.shields.io/badge/HTML5-27.4%25-E34C26?logo=html5&logoColor=white)
