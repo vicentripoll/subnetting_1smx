@@ -22,21 +22,41 @@
 
     <!-- Opciones principales -->
     <div class="home-grid">
-      <!-- Opción: Calculadora -->
+      <!-- Opción: Calculadora FLSM -->
       <a href="calculadora.html" class="home-card">
         <div class="home-card-icon">🧮</div>
-        <h2>Calculadora de Redes</h2>
+        <h2>Calculadora de Redes FLSM</h2>
         <p>Explora el subnetting paso a paso. Introduce una red, máscara y número de subredes para ver cómo se calcula cada valor. Perfecta para entender el proceso en detalle.</p>
         <div class="home-card-footer">
           <span class="home-card-badge">Aprender</span>
         </div>
       </a>
 
-      <!-- Opción: Ejercicios -->
+      <!-- Opción: Ejercicios FLSM -->
       <a href="exercises.html" class="home-card">
         <div class="home-card-icon">📚</div>
-        <h2>Ejercicios Progresivos</h2>
+        <h2>Ejercicios Progresivos FLSM</h2>
         <p>Resuelve ejercicios de subnetting de menor a mayor dificultad. Debes resolver cada ejercicio correctamente para pasar al siguiente. Incluye validación automática y pistas.</p>
+        <div class="home-card-footer">
+          <span class="home-card-badge">Practicar</span>
+        </div>
+      </a>
+
+      <!-- Opción: Calculadora VLSM -->
+      <a href="vlsm_calculadora.html" class="home-card vlsm-card">
+        <div class="home-card-icon">🔀</div>
+        <h2>Calculadora de Redes VLSM</h2>
+        <p>Diseña subredes de distintos tamaños para cada necesidad de hosts. Ordena las demandas y calcula la máscara más eficiente para cada bloque.</p>
+        <div class="home-card-footer">
+          <span class="home-card-badge">VLSM</span>
+        </div>
+      </a>
+
+      <!-- Opción: Ejercicios VLSM -->
+      <a href="vlsm_exercises.html" class="home-card vlsm-card">
+        <div class="home-card-icon">🧩</div>
+        <h2>Ejercicios Progresivos VLSM</h2>
+        <p>Practica asignaciones eficientes según distintos tamaños de red y necesidades de hosts. Aumenta la dificultad progresivamente con resolución guiada.</p>
         <div class="home-card-footer">
           <span class="home-card-badge">Practicar</span>
         </div>
@@ -94,6 +114,16 @@
       transform: translateY(-8px);
       border-color: #3b82f6;
       box-shadow: 0 16px 40px rgba(59, 130, 246, 0.2);
+    }
+
+    .vlsm-card {
+      border-color: #ddd6fe;
+      background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
+    }
+
+    .vlsm-card:hover {
+      border-color: #8b5cf6;
+      box-shadow: 0 16px 40px rgba(139, 92, 246, 0.2);
     }
 
     .home-card-icon {

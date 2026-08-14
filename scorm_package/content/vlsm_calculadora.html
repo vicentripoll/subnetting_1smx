@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subnetting VLSM - SMX</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div class="hero-copy">
+        <div class="badge">💡 Redes · SMX</div>
+        <h1>Subnetting VLSM</h1>
+        <p class="subtitle">Calcula subredes de tamaño variable para distintas necesidades de hosts. Introduce la red base y la demanda de cada subred para obtener una asignación eficiente.</p>
+      </div>
+      <div class="hero-visual">
+        <img src="assets/network-illustration.svg" alt="Ilustración de redes y subnetting" />
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="badge">🧮 Calculadora VLSM</div>
+      <h2>Enunciado</h2>
+      <p>Introduce una red base y el número de hosts que necesita cada subred. La aplicación ordena las subredes por tamaño y calcula la máscara más eficiente para cada una.</p>
+      <div class="form-grid">
+        <div class="field-group">
+          <label for="networkInput"><strong>Red base</strong></label>
+          <input id="networkInput" type="text" value="192.168.10.0" placeholder="Ej: 192.168.10.0" />
+          <span class="hint">IP de red sin máscara.</span>
+        </div>
+        <div class="field-group">
+          <label for="prefixInput"><strong>Máscara CIDR base</strong></label>
+          <input id="prefixInput" type="number" min="1" max="30" value="24" />
+          <span class="hint">Introduce el prefijo en formato /24.</span>
+        </div>
+        <div class="field-group" style="grid-column: 1 / -1;">
+          <label for="requirementsInput"><strong>Necesidades de hosts</strong></label>
+          <textarea id="requirementsInput" rows="3" placeholder="50, 30, 10, 2">50, 30, 10, 2</textarea>
+          <span class="hint">Escribe los requisitos separados por comas o espacios.</span>
+        </div>
+      </div>
+      <button id="applyVlsm" class="primary" type="button" style="margin-top: 18px;">Calcular VLSM</button>
+    </div>
+
+    <div class="card">
+      <div class="badge">📊 Resumen</div>
+      <div class="info-grid">
+        <div class="info-card">
+          <strong>Tipo</strong>
+          <span id="info-type">VLSM</span>
+        </div>
+        <div class="info-card">
+          <strong>Red base</strong>
+          <span id="info-network">192.168.10.0</span>
+        </div>
+        <div class="info-card">
+          <strong>Máscara base</strong>
+          <span id="info-base-mask">/24</span>
+        </div>
+        <div class="info-card">
+          <strong>Hosts útiles totales</strong>
+          <span id="info-total">-</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="badge">📋 Tabla de asignación</div>
+      <p class="hint">La asignación se ordena de mayor a menor tamaño para aprovechar mejor el espacio disponible.</p>
+      <div class="table-wrapper">
+        <table class="subnet-table">
+          <thead>
+            <tr>
+              <th>Subred</th>
+              <th>Necesidad</th>
+              <th>Máscara</th>
+              <th>Red</th>
+              <th>Broadcast</th>
+              <th>Rango hosts</th>
+              <th>Usables</th>
+            </tr>
+          </thead>
+          <tbody id="vlsmTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="secondary" id="resetBtn" type="button">Reiniciar</button>
+      <a href="vlsm_exercises.html" class="button primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; padding: 12px 20px; border-radius: 12px; font-weight: 700; background: linear-gradient(90deg, #8b5cf6, #a78bfa); color: white; cursor: pointer; border: none; box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08); transition: transform 0.15s ease, box-shadow 0.15s ease;">📚 Ejercicios VLSM</a>
+      <a href="index.html" class="button secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; padding: 12px 20px; border-radius: 12px; font-weight: 700; background: #f3f4f6; color: #1f2937; cursor: pointer; border: 1px solid #d1d5db; box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08); transition: transform 0.15s ease, box-shadow 0.15s ease;">← Volver al inicio</a>
+    </div>
+  </div>
+
+  <script src="vlsm_script.js" defer></script>
+</body>
+</html>
